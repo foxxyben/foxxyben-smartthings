@@ -1,5 +1,6 @@
 /**
- *  SimpliSafe Alarm State
+ *  SimpliSafe Alarm State revision 2
+ *  12-25-2015
  *
  *  Copyright 2015
  *
@@ -12,6 +13,7 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *  For use with SimpliSafe device type found here: https://community.smartthings.com/t/simplisafe-alarm-integration-cloud-to-cloud/8473
  */
 definition(
 	name: "SimpliSafe Alarm State",
