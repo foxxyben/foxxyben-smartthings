@@ -1,5 +1,5 @@
 /**
- *  SimpliSafe Alarm State revision 2
+ *  SimpliSafe Alarm State revision 3
  *  12-25-2015
  *
  *  Copyright 2015 Ben Fox
@@ -34,13 +34,13 @@ preferences {
         section("Change to this arming state...") {
 			input "alarmState","enum", options: ["Away", "Home", "Off"], required: true
 		}
-		section("When SmartThings changes to this mode... [optional]") {
+		section("When SmartThings changes to this mode... (optional)") {
             input "smartthingsMode","mode",multiple:true, required: false
 		}
 	}
     page(name: "Notifications", title: "Notifications Options", install: true, uninstall: true) {
 		section("Notifications") {
-			input "sendPushMessage", "enum", title: "Send a push notification?", metadata: [values: ["Yes", "No"]], 
+			input "sendPushMessage", "enum", title: "Send a push notification?", options: ["Yes", "No"], 
             		required: false
 			input "phone", "phone", title: "Send a Text Message?", required: false
 		}
