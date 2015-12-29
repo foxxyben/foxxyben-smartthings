@@ -1,5 +1,5 @@
 /**
- *  SimpliSafe Alarm State revision 3
+ *  SimpliSafe Alarm State revision 4
  *  12-25-2015
  *
  *  Copyright 2015 Ben Fox
@@ -82,21 +82,26 @@ def changeMode(evt) {
             return			
         }
 
-        if (alarmState=="Home") {
-            simpliSafeAlarm.home()
-            message = "SimpliSafe is Armed HOME"
-        }
-
-        if (alarmState=="Away") {
-            simpliSafeAlarm.away()
-            message = "SimpliSafe is Armed AWAY"
-        }
-
-        if (alarmState=="Off") {
-            simpliSafeAlarm.off()
-            message = "SimpliSafe is DISARMED"
-        }
-
+	try {
+	        if (alarmState=="Home") {
+	            simpliSafeAlarm.home()
+	            message = "SimpliSafe is Armed HOME"
+	        }
+	
+	        if (alarmState=="Away") {
+	            simpliSafeAlarm.away()
+	            message = "SimpliSafe is Armed AWAY"
+	        }
+	
+	        if (alarmState=="Off") {
+	            simpliSafeAlarm.off()
+	            message = "SimpliSafe is DISARMED"
+	        }
+	} catch (all) {
+		message = "Something broke and system status was not changed!"
+		log.error "$message"
+	}
+	
         send(message)
     }
 }
