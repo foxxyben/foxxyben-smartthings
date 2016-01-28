@@ -1,5 +1,5 @@
 /**
- *  Ecobee Set Comfort Profile rev 1
+ *  Ecobee Set Comfort Profile rev 2
  *  1-24-2016
  *
  *  Copyright 2016 Ben Fox
@@ -22,7 +22,7 @@ definition(
 	description: "Automatically sets the Ecobee3 to one of the standard comfort profiles based on the Smartthings mode. For use with the StrykerSKS ecobee device type.",
 	category: "My Apps",
 	iconUrl: "https://s3.amazonaws.com/smartapp-icons/Partner/ecobee.png",
-	iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Partner/ecobee.png"
+	iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Partner/ecobee.png@2x"
 )
 
 preferences {
