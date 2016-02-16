@@ -1,5 +1,5 @@
 /**
- *  SimpliSafe Alarm State revision 5
+ *  SimpliSafe Alarm State revision 6
  *  2-16-2016
  *
  *  Copyright 2016 Ben Fox
@@ -74,21 +74,14 @@ def modeaction(evt) {
 	if(evt.value in modealarmoff && state.alarmstate !="off") {
     	log.debug("Location mode: $state.locationmode")
     	setalarmoff()
-    }
-    else {
-		if(evt.value in modealarmaway && state.alarmstate !="away") {
-			log.debug("Location mode: $state.locationmode")
-    		setalarmaway()
-  		}
-		else {
-			if(evt.value in modealarmhome && state.alarmstate !="home") {
-				log.debug("Location mode: $state.locationmode")
-				setalarmhome()
-			}
-			else {
-				log.debug("No actions set for location mode ${state.locationmode} or SimpliSafe already set to ${state.alarmstate} - aborting")
-    		}
-		}  
+    } else if(evt.value in modealarmaway && state.alarmstate !="away") {
+		log.debug("Location mode: $state.locationmode")
+    	setalarmaway()
+  	} else if(evt.value in modealarmhome && state.alarmstate !="home") {
+		log.debug("Location mode: $state.locationmode")
+        setalarmhome()
+	} else {
+		log.debug("No actions set for location mode ${state.locationmode} or SimpliSafe already set to ${state.alarmstate} - aborting")
 	}
 }
 
