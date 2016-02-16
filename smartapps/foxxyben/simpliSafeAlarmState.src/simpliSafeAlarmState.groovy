@@ -81,7 +81,7 @@ def modeaction(evt) {
 		log.debug("Location mode: $state.locationmode")
         setalarmhome()
 	} else {
-		log.debug("No actions set for location mode ${state.locationmode} or ${alarmsystem.name} already set to ${state.alarmstate} - aborting")
+		log.debug("No actions set for location mode ${state.locationmode} or ${alarmsystem.displayName} already set to ${state.alarmstate} - aborting")
 	}
 }
 
