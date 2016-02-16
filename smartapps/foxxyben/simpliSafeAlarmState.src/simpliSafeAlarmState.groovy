@@ -1,8 +1,8 @@
 /**
- *  SimpliSafe Alarm State revision 4
- *  12-25-2015
+ *  SimpliSafe Alarm State revision 5
+ *  2-16-2016
  *
- *  Copyright 2015 Ben Fox
+ *  Copyright 2016 Ben Fox
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -29,14 +29,17 @@ preferences {
 	page(name: "selectProgram", title: "SimpliSafe Alarm State", install: false, uninstall: true,
     			nextPage: "Notifications") {
 		section("Use this Alarm...") {
-			input "simpliSafeAlarm", "capability.alarm", multiple: false, required: true
+			input "alarmsystem", "capability.alarm", multiple: false, required: true
 		}
-        section("Change to this arming state...") {
-			input "alarmState","enum", options: ["Away", "Home", "Off"], required: true
-		}
-		section("When SmartThings changes to this mode... (optional)") {
-            input "smartthingsMode","mode",multiple:true, required: false
-		}
+        section("Set SimpliSafe to Off when mode matches") {
+			input "modealarmoff", "mode", title: "Select mode for 'Disarmed'", multiple: true, required: false
+        }
+		section("Set SimpliSafe to Away when mode matches") {
+			input "modealarmaway", "mode", title: "Select mode for 'Armed Away'", multiple: true, required: false  
+        }
+		section("Set SimpliSafe to Home when mode matches") {
+			input "modealarmhome", "mode", title: "Select mode for 'Armed Home'", multiple: true, required: false
+        }
 	}
     page(name: "Notifications", title: "Notifications Options", install: true, uninstall: true) {
 		section("Notifications") {
@@ -51,61 +54,66 @@ preferences {
 }
 
 def installed() {
-	subscribe(location, changeMode)
-	subscribe(app, changeMode)
+	init()
 }
 
 def updated() {
-	unsubscribe()
-	subscribe(location, changeMode)
-	subscribe(app, changeMode)
+    unsubscribe()
+    unschedule()
+    init()
 }
+  
+def init() {
+    subscribe(location, "mode", modeaction)
+    subscribe(alarmsystem, "alarm", alarmstate)
+}
+  
+def modeaction(evt) {
+	state.locationmode = evt.value
 
-def changeMode(evt) {
-    def currentState = simpliSafeAlarm.currentState("alarm")
-    log.debug "Current SimpliSafe state is: ${currentState.value}"
-    if ( alarmState.toLowerCase() == currentState.value.toLowerCase() ) {
-    	log.debug "No alarm state change needed"
+	if(evt.value in modealarmoff && state.alarmstate !="off") {
+    	log.debug("Location mode: $state.locationmode")
+    	setalarmoff()
     }
-    if ( alarmState.toLowerCase() != currentState.value.toLowerCase() ) {
-        def message
-
-        Boolean foundMode=false        
-        smartthingsMode.each {
-            if (it==location.mode) {
-                foundMode=true            
-            }            
-        }        
-
-        if ((smartthingsMode != null) && (!foundMode)) {
-            log.debug "changeMode>location.mode= $location.mode, smartthingsMode=${smartthingsMode},foundMode=${foundMode}, not doing anything"
-            return			
-        }
-
-	try {
-	        if (alarmState=="Home") {
-	            simpliSafeAlarm.home()
-	            message = "SimpliSafe is Armed HOME"
-	        }
-	
-	        if (alarmState=="Away") {
-	            simpliSafeAlarm.away()
-	            message = "SimpliSafe is Armed AWAY"
-	        }
-	
-	        if (alarmState=="Off") {
-	            simpliSafeAlarm.off()
-	            message = "SimpliSafe is DISARMED"
-	        }
-	} catch (all) {
-		message = "Something broke and system status was not changed!"
-		log.error "$message"
+    else {
+		if(evt.value in modealarmaway && state.alarmstate !="away") {
+			log.debug("Location mode: $state.locationmode")
+    		setalarmaway()
+  		}
+		else {
+			if(evt.value in modealarmhome && state.alarmstate !="home") {
+				log.debug("Location mode: $state.locationmode")
+				setalarmhome()
+			}
+			else {
+				log.debug("No actions set for location mode ${state.locationmode} or SimpliSafe already set to ${state.alarmstate} - aborting")
+    		}
+		}  
 	}
-	
-        send(message)
-    }
 }
 
+def setalarmoff() {
+    def message = "SimpliSafe is DISARMED"
+    log.info(message)
+    send(message)
+    alarmsystem.off()
+}
+  
+def setalarmaway() {
+    def message = "SimpliSafe is Armed AWAY"
+    log.info(message)
+    send(message)
+    alarmsystem.away()
+}
+  
+def setalarmhome() {
+    def message = "SimpliSafe is Armed HOME"
+    log.info(message)
+    send(message)
+    alarmsystem.home()
+}
+
+  
 private send(msg) {
 	if (sendPushMessage != "No") {
 		log.debug("sending push message")
