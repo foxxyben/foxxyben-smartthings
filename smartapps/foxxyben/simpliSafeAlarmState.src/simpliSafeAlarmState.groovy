@@ -1,5 +1,5 @@
 /**
- *  SimpliSafe Alarm State revision 6
+ *  SimpliSafe Alarm State revision 7
  *  2-16-2016
  *
  *  Copyright 2016 Ben Fox
@@ -31,14 +31,14 @@ preferences {
 		section("Use this Alarm...") {
 			input "alarmsystem", "capability.alarm", multiple: false, required: true
 		}
-        section("Set SimpliSafe to Off when mode matches") {
-			input "modealarmoff", "mode", title: "Select mode for 'Disarmed'", multiple: true, required: false
+        section("Set alarm to 'Off' when mode matches") {
+			input "modealarmoff", "mode", title: "Select modes for 'Disarmed'", multiple: true, required: false
         }
-		section("Set SimpliSafe to Away when mode matches") {
-			input "modealarmaway", "mode", title: "Select mode for 'Armed Away'", multiple: true, required: false  
+		section("Set alarm to 'Away' when mode matches") {
+			input "modealarmaway", "mode", title: "Select modes for 'Armed Away'", multiple: true, required: false  
         }
-		section("Set SimpliSafe to Home when mode matches") {
-			input "modealarmhome", "mode", title: "Select mode for 'Armed Home'", multiple: true, required: false
+		section("Set alarm to 'Home' when mode matches") {
+			input "modealarmhome", "mode", title: "Select modes for 'Armed Home'", multiple: true, required: false
         }
 	}
     page(name: "Notifications", title: "Notifications Options", install: true, uninstall: true) {
@@ -81,26 +81,26 @@ def modeaction(evt) {
 		log.debug("Location mode: $state.locationmode")
         setalarmhome()
 	} else {
-		log.debug("No actions set for location mode ${state.locationmode} or SimpliSafe already set to ${state.alarmstate} - aborting")
+		log.debug("No actions set for location mode ${state.locationmode} or ${alarmsystem.name} already set to ${state.alarmstate} - aborting")
 	}
 }
 
 def setalarmoff() {
-    def message = "SimpliSafe is DISARMED"
+    def message = "$alarmsystem.name is DISARMED"
     log.info(message)
     send(message)
     alarmsystem.off()
 }
   
 def setalarmaway() {
-    def message = "SimpliSafe is Armed AWAY"
+    def message = "$alarmsystem.name is Armed AWAY"
     log.info(message)
     send(message)
     alarmsystem.away()
 }
   
 def setalarmhome() {
-    def message = "SimpliSafe is Armed HOME"
+    def message = "$alarmsystem.name is Armed HOME"
     log.info(message)
     send(message)
     alarmsystem.home()
