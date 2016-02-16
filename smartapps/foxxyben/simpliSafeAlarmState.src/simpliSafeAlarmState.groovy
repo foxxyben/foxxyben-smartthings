@@ -86,21 +86,21 @@ def modeaction(evt) {
 }
 
 def setalarmoff() {
-    def message = "$alarmsystem.name is DISARMED"
+    def message = "$alarmsystem.displayName is DISARMED"
     log.info(message)
     send(message)
     alarmsystem.off()
 }
   
 def setalarmaway() {
-    def message = "$alarmsystem.name is Armed AWAY"
+    def message = "$alarmsystem.displayName is Armed AWAY"
     log.info(message)
     send(message)
     alarmsystem.away()
 }
   
 def setalarmhome() {
-    def message = "$alarmsystem.name is Armed HOME"
+    def message = "$alarmsystem.displayName is Armed HOME"
     log.info(message)
     send(message)
     alarmsystem.home()
