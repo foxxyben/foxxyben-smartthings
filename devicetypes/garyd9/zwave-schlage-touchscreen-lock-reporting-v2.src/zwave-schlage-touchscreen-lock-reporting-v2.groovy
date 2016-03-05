@@ -58,7 +58,7 @@
 metadata 
 {
 	// Automatically generated. Make future change here.
-	definition (name: "Z-Wave Schlage Touchscreen Lock", namespace: "garyd9", author: "Gary D") 
+	definition (name: "Z-Wave Schlage Touchscreen Lock Reporting v2", namespace: "garyd9", author: "Gary D") 
     {
 		capability "Actuator"
 		capability "Lock"
@@ -100,32 +100,40 @@ metadata
 		reply "988100620100,delay 4200,9881006202": "command: 9881, payload: 00 62 03 00 00 00 FE FE"
 	}
 
-	tiles {
-		standardTile("toggle", "device.lock", width: 2, height: 2)
-		{
-			state "locked", label:'locked', action:"lock.unlock", icon:"st.locks.lock.locked", backgroundColor:"#79b821", nextState:"unlocking"
-			state "unlocked", label:'unlocked', action:"lock.lock", icon:"st.locks.lock.unlocked", backgroundColor:"#ffffff", nextState:"locking"
-			state "unknown", label:"unknown", action:"lock.lock", icon:"st.locks.lock.unknown", backgroundColor:"#ffffff", nextState:"locking"
-			state "locking", label:'locking', icon:"st.locks.lock.locked", backgroundColor:"#79b821"
-			state "unlocking", label:'unlocking', icon:"st.locks.lock.unlocked", backgroundColor:"#ffffff"
+	tiles(scale: 2) {
+		multiAttributeTile(name:"toggle", type: "lighting", width: 6, height: 4){
+			tileAttribute ("device.lock", key: "PRIMARY_CONTROL") {
+		
+			attributeState "locked", label:'locked', action:"lock.unlock", icon:"st.locks.lock.locked", backgroundColor:"#79b821", nextState:"unlocking"
+			attributeState "unlocked", label:'unlocked', action:"lock.lock", icon:"st.locks.lock.unlocked", backgroundColor:"#ffffff", nextState:"locking"
+			attributeState "unknown", label:"unknown", action:"lock.lock", icon:"st.locks.lock.unknown", backgroundColor:"#ffffff", nextState:"locking"
+			attributeState "locking", label:'locking', icon:"st.locks.lock.locked", backgroundColor:"#79b821"
+			attributeState "unlocking", label:'unlocking', icon:"st.locks.lock.unlocked", backgroundColor:"#ffffff"
 		}
-		standardTile("lock", "device.lock", inactiveLabel: false, decoration: "flat")
-		{
-			state "default", label:'lock', action:"lock.lock", icon:"st.locks.lock.locked", nextState:"locking"
+        }
+		//standardTile("lock", "device.lock", inactiveLabel: false, decoration: "flat")
+		//{
+		//	state "default", label:'lock', action:"lock.lock", icon:"st.locks.lock.locked", nextState:"locking"
+		//}
+		//standardTile("unlock", "device.lock", inactiveLabel: false, decoration: "flat")
+		//{
+		//	state "default", label:'unlock', action:"lock.unlock", icon:"st.locks.lock.unlocked", nextState:"unlocking"
+	//	}
+		valueTile("battery", "device.battery", inactiveLabel: false, canChangeBackground: true, width: 2, height: 2) {
+			state "battery", label:'${currentValue}% Battery', unit:"",
+            backgroundColors:[
+				[value: 19, color: "#BC2323"],
+				[value: 20, color: "#D04E00"],
+				[value: 30, color: "#D04E00"],
+				[value: 40, color: "#DAC400"],
+				[value: 41, color: "#79b821"]
+			]
 		}
-		standardTile("unlock", "device.lock", inactiveLabel: false, decoration: "flat")
-		{
-			state "default", label:'unlock', action:"lock.unlock", icon:"st.locks.lock.unlocked", nextState:"unlocking"
-		}
-		valueTile("battery", "device.battery", inactiveLabel: false, decoration: "flat")
-		{
-			state "battery", label:'${currentValue}% battery', unit:""
-		}
-		standardTile("refresh", "device.lock", inactiveLabel: false, decoration: "flat")
+		standardTile("refresh", "device.lock", inactiveLabel: false, decoration: "flat",  width: 2, height: 2)
 		{
 			state "default", label:'   ', action:"refresh.refresh", icon:"st.secondary.refresh"
 		}
-		standardTile("alarmMode", "device.alarmMode", inactiveLabel: true, canChangeIcon: false)
+		standardTile("alarmMode", "device.alarmMode", inactiveLabel: true, canChangeIcon: false, decoration: "flat", width: 2, height: 2)
 		{
 			state "unknown_alarmMode", label: 'Alarm Mode\nLoading...', icon:"st.unknown.unknown.unknown", action:"setAlarmMode", nextState:"unknown_alarmMode"
 			state "Off_alarmMode", label: 'Alarm: Off', icon:"st.alarm.beep.beep", action:"setAlarmMode", nextState:"unknown_alarmMode"
@@ -133,33 +141,33 @@ metadata
 			state "Tamper_alarmMode", label: 'Tamper Alarm', icon:"st.alarm.beep.beep", action:"setAlarmMode", backgroundColor:"#79b821", nextState:"unknown_alarmMode"
 			state "Kick_alarmMode", label: 'Kick Alarm', icon:"st.alarm.beep.beep", action:"setAlarmMode", backgroundColor:"#79b821", nextState:"unknown_alarmMode"
 		}
-		controlTile("alarmSensitivity", "device.alarmSensitivity", "slider", height: 1, width: 2, inactiveLabel: false)
+		controlTile("alarmSensitivity", "device.alarmSensitivity", "slider", height: 2, width: 2, inactiveLabel: false)
 		{
 			state "alarmSensitivity", label:'Sensitivity', action:"setAlarmSensitivity", backgroundColor:"#ff0000"
 		}
-		standardTile("autoLock", "device.autoLock", inactiveLabel: true, canChangeIcon: false)
+		standardTile("autoLock", "device.autoLock", inactiveLabel: true, canChangeIcon: false, decoration: "flat", width: 2, height: 2)
 		{
 			state "unknown_autoLock", label: 'Auto Lock\nLoading...', icon:"st.unknown.unknown.unknown", action:"setAutoLock", nextState:"unknown_autoLock"
 			state "off_autoLock", label: 'Auto Lock', icon:"st.presence.house.unlocked", action:"setAutoLock", nextState:"unknown_autoLock"
-			state "on_autoLock", label: 'Auto Lock', icon:"st.presence.house.secured", action:"setAutoLock", backgroundColor:"#79b821", nextState:"unknown_autoLock"
+			state "on_autoLock", label: 'Auto Lock ENABLED', icon:"st.presence.house.secured", action:"setAutoLock", nextState:"unknown_autoLock"
 		}
 
 		// not included in details
 
-		standardTile("vacationMode", "device.vacationMode", inactiveLabel: true, canChangeIcon: false)
+		standardTile("vacationMode", "device.vacationMode", inactiveLabel: true, canChangeIcon: false, decoration: "flat", width: 2, height: 2)
 		{
 			state "unknown_vacationMode", label: 'Vacation\nLoading...', icon:"st.unknown.unknown.unknown", action:"setVacationMode", nextState:"unknown_vacationMode"
 			state "off_vacationMode", label: 'Vacation', icon:"st.Health & Wellness.health2", action:"setVacationMode", nextState:"unknown_vacationMode"
-			state "on_vacationMode", label: 'Vacation', icon:"st.Health & Wellness.health2", action:"setVacationMode", backgroundColor:"#79b821", nextState:"unknown_vacationMode"
+			state "on_vacationMode", label: 'Vacation', icon:"st.Health & Wellness.health2", action:"setVacationMode", nextState:"unknown_vacationMode"
 		}
 
 		// not included in details
 
-		standardTile("lockLeave", "device.lockLeave", inactiveLabel: true, canChangeIcon: false)
+		standardTile("lockLeave", "device.lockLeave", inactiveLabel: true, canChangeIcon: false, decoration: "flat", width: 2, height: 2)
 		{
 			state "unknown_lockLeave", label: 'Lock & Leave\nLoading...', icon:"st.unknown.unknown.unknown", action:"setLockLeave", nextState:"unknown_lockLeave"
 			state "off_lockLeave", label: 'Lock & Leave', icon:"st.Health & Wellness.health12", action:"setLockLeave", nextState:"unknown_lockLeave"
-			state "on_lockLeave", label: 'Lock & Leave', icon:"st.Health & Wellness.health12", action:"setLockLeave", backgroundColor:"#79b821", nextState:"unknown_lockLeave"
+			state "on_lockLeave", label: 'Lock & Leave ENABLED', icon:"st.Health & Wellness.health12", action:"setLockLeave", nextState:"unknown_lockLeave"
 		}
 
 		// not included in details
