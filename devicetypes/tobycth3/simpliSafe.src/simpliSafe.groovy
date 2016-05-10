@@ -2,7 +2,7 @@
  *  SimpliSafe integration for SmartThings
  *
  *  Copyright 2015 Felix Gorodishter
- *	Modifications by Toby Harris - 11/10/2015
+ *	Modifications by Toby Harris - 5/10/2016
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -22,7 +22,7 @@ preferences {
 
 metadata {
 	// Automatically generated. Make future change here.
-	definition (name: "SimpliSafe", namespace: "", author: "Felix Gorodishter / Toby Harris") {
+	definition (name: "SimpliSafe", namespace: "tobycth3", author: "Toby Harris") {
 		capability "Alarm"
 		capability "Polling"
 		capability "Acceleration Sensor"
@@ -36,6 +36,9 @@ metadata {
 		command "home"
 		command "away"
 		command "off"
+		command "update_state"
+		command "update_temp"
+		attribute "events", "string"
 		attribute "recent_alarm", "string" 
 		attribute "recent_fire", "string" 
 		attribute "recent_co", "string" 
@@ -59,36 +62,41 @@ tiles(scale: 2) {
 			attributeState "pending home", label:'${name}', icon: "st.security.alarm.on", backgroundColor: "#ffffff"
 			attributeState "failed set", label:'error', icon: "st.secondary.refresh", backgroundColor: "#d44556"
         }
+		
+		tileAttribute("device.events", key: "SECONDARY_CONTROL", wordWrap: true) {
+			attributeState("default", label:'${currentValue}')
+		}
     }	
-
+	
     standardTile("off", "device.alarm", width: 2, height: 2, canChangeIcon: false, inactiveLabel: true, canChangeBackground: false) {
         state ("off", label:"off", action:"off", icon: "st.security.alarm.off", backgroundColor: "#008CC1", nextState: "pending")
         state ("away", label:"off", action:"off", icon: "st.security.alarm.off", backgroundColor: "#505050", nextState: "pending")
         state ("home", label:"off", action:"off", icon: "st.security.alarm.off", backgroundColor: "#505050", nextState: "pending")
         state ("pending", label:"pending", icon: "st.security.alarm.off", backgroundColor: "#ffffff")
 	}
-
+	
     standardTile("away", "device.alarm", width: 2, height: 2, canChangeIcon: false, inactiveLabel: true, canChangeBackground: false) {
         state ("off", label:"away", action:"away", icon: "st.security.alarm.on", backgroundColor: "#505050", nextState: "pending") 
 		state ("away", label:"away", action:"away", icon: "st.security.alarm.on", backgroundColor: "#008CC1", nextState: "pending")
         state ("home", label:"away", action:"away", icon: "st.security.alarm.on", backgroundColor: "#505050", nextState: "pending")
 		state ("pending", label:"pending", icon: "st.security.alarm.on", backgroundColor: "#ffffff")
 	}
-
+	
     standardTile("home", "device.alarm", width: 2, height: 2, canChangeIcon: false, inactiveLabel: true, canChangeBackground: false) {
         state ("off", label:"home", action:"home", icon: "st.Home.home4", backgroundColor: "#505050", nextState: "pending")
         state ("away", label:"home", action:"home", icon: "st.Home.home4", backgroundColor: "#505050", nextState: "pending")
 		state ("home", label:"home", action:"home", icon: "st.Home.home4", backgroundColor: "#008CC1", nextState: "pending")
 		state ("pending", label:"pending", icon: "st.Home.home4", backgroundColor: "#ffffff")
 	}
-
+    
 		standardTile("recent_alarm", "device.contact", inactiveLabel: false, width: 2, height: 2) {
 			state "closed", label:'Alarm', icon: "st.security.alarm.clear", backgroundColor: "#50C65F"
 			state "open", label:'ALARM', icon: "st.security.alarm.alarm", backgroundColor: "#d44556"
 		}
-		standardTile("freeze", "device.freeze_status", inactiveLabel: false, width: 2, height: 2) {
-			state "no alert", label:'Temp', icon: "st.alarm.temperature.normal", backgroundColor: "#50C65F"
-			state "alert", label:'TEMP', icon: "st.alarm.temperature.freeze", backgroundColor: "#d44556"
+		standardTile("freeze", "device.freeze_status", width: 2, height: 2, canChangeIcon: false, inactiveLabel: true, canChangeBackground: false) {
+			state ("no alert", label:'Temp', action:"update_temp", icon: "st.alarm.temperature.normal", backgroundColor: "#50C65F", nextState: "updating")
+			state ("alert", label:'TEMP', action:"update_temp", icon: "st.alarm.temperature.freeze", backgroundColor: "#d44556", nextState: "updating")
+			state ("updating", label:"updating", icon: "st.alarm.temperature.normal", backgroundColor: "#ffffff")
 		}
 		standardTile("recent_fire", "device.smoke", inactiveLabel: false, width: 2, height: 2) {
 			state "clear", label:'Fire', icon: "st.alarm.smoke.clear", backgroundColor: "#50C65F"
@@ -102,16 +110,17 @@ tiles(scale: 2) {
 			state "dry", label:'Flood', icon: "st.alarm.water.dry", backgroundColor: "#50C65F"
 			state "wet", label:'FLOOD', icon: "st.alarm.water.wet", backgroundColor: "#d44556"
 		}
-		standardTile("warnings", "device.acceleration", inactiveLabel: false, width: 2, height: 2) {
-			state "inactive", label:'Base', icon: "st.Kids.kids15", backgroundColor: "#50C65F"
-			state "active", label:'BASE', icon: "st.Kids.kids15", backgroundColor: "#d44556"
+		standardTile("warnings", "device.acceleration", width: 2, height: 2, canChangeIcon: false, inactiveLabel: true, canChangeBackground: false) {
+			state ("inactive", label:'Base', action:"update_state", icon: "st.Kids.kids15", backgroundColor: "#50C65F", nextState: "updating")
+			state ("active", label:'BASE', action:"update_state", icon: "st.Kids.kids15", backgroundColor: "#d44556", nextState: "updating")
+			state ("updating", label:"updating", icon: "st.Kids.kids15", backgroundColor: "#ffffff")
 		}
 		standardTile("refresh", "device.alarm", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
 			state "default", action:"polling.poll", icon:"st.secondary.refresh"
 		}
 
-		main "alarm"
-		details(["alarm", "off", "away", "home", "recent_alarm", "freeze", "recent_fire", "recent_co", "recent_flood", "warnings", "refresh"])
+		main(["alarm"])
+		details(["alarm","off", "away", "home", "recent_alarm", "freeze", "recent_fire", "recent_co", "recent_flood", "warnings", "refresh"])
 	}
 }
 
@@ -126,7 +135,7 @@ def parse(String description) {
 def off() {
 	log.info "Executing 'off'"
 	api('set-state', [state: off, mobile: 1]) { response ->
-		log.debug "Set-state response $response.status $response.data"
+	//	log.trace "Set-state response $response.status $response.data"
 	}
 	// refresh status
 	poll()
@@ -135,7 +144,7 @@ def off() {
 def home() { 
 	log.info "Executing 'home'"
 	api('set-state', [state: home, mobile: 1]) { response ->
-		log.debug "Set-state response $response.status $response.data"
+	//	log.trace "Set-state response $response.status $response.data"
 	}
 	// refresh status
 	poll()	
@@ -144,7 +153,25 @@ def home() {
 def away() {
 	log.info "Executing 'away'"
 	api('set-state', [state: away, mobile: 1]) { response ->
-		log.debug "Set-state response $response.status $response.data"
+	//	log.trace "Set-state response $response.status $response.data"
+	}
+	// refresh status
+	poll()
+}
+
+def update_state() {
+		log.info "Updating state from base station"
+	api('get-state', []) { response ->
+	//	log.trace "Get-state response $response.status $response.data"
+	}
+	// refresh status
+	poll()   
+  }
+	
+def update_temp() {
+		log.info "Updating temperature from base station"
+	api('update-freeze', []) { response ->
+	//	log.trace "Update-freeze response $response.status $response.data"
 	}
 	// refresh status
 	poll()
@@ -172,8 +199,9 @@ def both() {
 def poll() {
 	log.info "Executing 'poll'"
 
+	log.info "Executing 'status'"
 	api('status', []) { response ->
-		log.debug "Status response $response.status $response.data"
+	//	log.trace "Status response $response.status $response.data"
 
 		if (response.data.return_code < 1) {
 			return
@@ -261,7 +289,7 @@ def poll() {
 		else {
 	sendEvent(name: 'water', value: "dry", displayed: recent_flood_changed, isStateChange: recent_flood_changed)
 		}
-if (new_freeze <= 41) { 
+	if (new_freeze <= 41) { 
 	sendEvent(name: 'freeze_status', value: "alert", displayed: freeze_changed, isStateChange: freeze_changed) }
 		else {
 	sendEvent(name: 'freeze_status', value: "no alert", displayed: freeze_changed, isStateChange: freeze_changed)
@@ -272,6 +300,35 @@ if (new_freeze <= 41) {
 	sendEvent(name: 'acceleration', value: "inactive", displayed: warnings_changed, isStateChange: warnings_changed)
 		}
  }
+
+	log.info "Executing 'events'" 
+	api('events', []) { response ->
+	//	log.trace "Events response $response.status $response.data"
+
+		if (response.data.return_code < 1) {
+			return
+		} 
+        
+		def raw_event_desc = response.data.events.event_desc[0]
+		if (raw_event_desc.find(/System Armed|System Disarmed/)) {
+			def parsed_event_desc = raw_event_desc.findAll(/Armed|Disarmed|[(]\w*\s+\w+[)]/)
+			parsed_event_desc = parsed_event_desc.join(' in ')
+			state.parsed_event_desc = parsed_event_desc.replaceAll("[()]","") + " - "
+		} else if (raw_event_desc.size() <=26 ) {
+			state.parsed_event_desc = raw_event_desc + " - "
+			} else {
+			def parsed_event_desc = raw_event_desc.take(26) + "... "	
+			state.parsed_event_desc = parsed_event_desc
+		}
+		
+		def new_events = state.parsed_event_desc + response.data.events.event_time[0] + " " + response.data.events.event_date[0]
+		def old_events = device.currentValue("events")
+		def events_changed = new_events != old_events
+      
+		log.debug "Events: $new_events"
+        
+		sendEvent(name: 'events', value: new_events, displayed: events_changed, isStateChange: events_changed)       
+ }        
  	// log out session	
 	logout()
 }
@@ -304,7 +361,10 @@ def api(method, args = [], success = {}) {
 	def methods = [
 		'locations': [uri: "https://simplisafe.com/mobile/$state.auth.uid/locations", type: 'post'],
 		'status': [uri: "https://simplisafe.com/mobile/$state.auth.uid/sid/$state.locationID/dashboard", type: 'post'],
+		'events': [uri: "https://simplisafe.com/mobile/$state.auth.uid/sid/$state.locationID/events", type: 'post'],
+		'get-state': [uri: "https://simplisafe.com/mobile/$state.auth.uid/sid/$state.locationID/get-state", type: 'post'],
 		'set-state': [uri: "https://simplisafe.com/mobile/$state.auth.uid/sid/$state.locationID/set-state", type: 'post'],
+		'update-freeze': [uri: "https://simplisafe.com/account2/$state.auth.uid/sid/$state.locationID/control-panel/utility/update-freeze", type: 'post'],
 		'logout': [uri: "https://simplisafe.com/mobile/logout", type: 'post']
 	]
 
@@ -326,7 +386,7 @@ def doRequest(uri, args, type, success) {
 		body: args
 	]
 
-	log.debug params
+//	log.trace params
 
 	try {
 		if (type == 'post') {
@@ -358,8 +418,8 @@ def login(method = null, args = [], success = {}) {
 	state.cookiess = ''
 
 	httpPost(params) {response ->
-		log.debug "Login response, $response.status $response.data"
-		log.debug response.headers
+	//	log.trace "Login response, $response.status $response.data"
+	//	log.trace response.headers
 
 		state.auth = response.data
 
@@ -368,10 +428,10 @@ def login(method = null, args = [], success = {}) {
 
 		response.getHeaders('Set-Cookie').each {
 			String cookie = it.value.split(';|,')[0]
-			log.debug "Adding cookie to collection: $cookie"
+		//	log.trace "Adding cookie to collection: $cookie"
 			state.cookiess = state.cookiess+cookie+';'
 		}
-		log.debug "cookies: $state.cookiess"
+	//	log.trace "cookies: $state.cookiess"
 
 		// get location ID
 		locations()
@@ -385,7 +445,7 @@ def locations() {
 	log.info "Executing 'locations'"
 
 	api('locations', []) { response ->
-		log.debug "Locations response $response.status $response.data"
+	//	log.trace "Locations response $response.status $response.data"
 
 	if (response.data.num_locations < 1) {
 			return
@@ -396,10 +456,10 @@ def locations() {
  }
 }
 
-def logout(method = null, args = [], success = {}) { 
+def logout() { 
 	log.info "Executing 'logout'"
 	api('logout', []) { response ->
-		log.debug "Logout response $response.status $response.data"
+	//	log.trace "Logout response $response.status $response.data"
 	}	
 	state.auth = false		
 }
@@ -410,10 +470,10 @@ def isLoggedIn() {
 		return false
 	}
 
-	log.debug state.auth.uid
+//	log.trace state.auth.uid
 
 	def now = new Date().getTime();
-	log.debug now
-	log.debug state.auth.expires_at
+//	log.trace now
+//	log.trace state.auth.expires_at
 	return state.auth.expires_at > now
 }
