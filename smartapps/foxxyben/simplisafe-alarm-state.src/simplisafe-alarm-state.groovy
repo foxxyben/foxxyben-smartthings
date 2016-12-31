@@ -1,6 +1,6 @@
 /**
- *  SimpliSafe Alarm State revision 7
- *  2-16-2016
+ *  SimpliSafe Alarm State revision 8
+ *  12-31-2016
  *
  *  Copyright 2016 Ben Fox
  *
@@ -64,20 +64,32 @@ def updated() {
 }
   
 def init() {
+	subscribe(app, onAppTouch)
     subscribe(location, "mode", modeaction)
     subscribe(alarmsystem, "alarm", alarmstate)
 }
-  
+
+def onAppTouch(event) {
+	log.debug("Running App Manually")
+    state.locationmode = location.mode
+	setalarmmode()
+}
+
 def modeaction(evt) {
 	state.locationmode = evt.value
+	setalarmmode()
+}
 
-	if(evt.value in modealarmoff && state.alarmstate !="off") {
+def setalarmmode() {
+	state.alarmstate = alarmsystem.currentState("alarm").value.toLowerCase()
+    log.debug("Current alarm state is: ${state.alarmstate}")
+	if(state.locationmode in modealarmoff && state.alarmstate !="off") {
     	log.debug("Location mode: $state.locationmode")
     	setalarmoff()
-    } else if(evt.value in modealarmaway && state.alarmstate !="away") {
+    } else if(state.locationmode in modealarmaway && state.alarmstate !="away") {
 		log.debug("Location mode: $state.locationmode")
     	setalarmaway()
-  	} else if(evt.value in modealarmhome && state.alarmstate !="home") {
+  	} else if(state.locationmode in modealarmhome && state.alarmstate !="home") {
 		log.debug("Location mode: $state.locationmode")
         setalarmhome()
 	} else {
