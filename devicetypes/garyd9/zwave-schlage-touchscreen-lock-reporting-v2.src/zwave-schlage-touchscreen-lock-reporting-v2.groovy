@@ -105,7 +105,7 @@ metadata
 			tileAttribute ("device.lock", key: "PRIMARY_CONTROL") {
 		
 			attributeState "locked", label:'locked', action:"lock.unlock", icon:"st.locks.lock.locked", backgroundColor:"#79b821", nextState:"unlocking"
-			attributeState "unlocked", label:'unlocked', action:"lock.lock", icon:"st.locks.lock.unlocked", backgroundColor:"#ffffff", nextState:"locking"
+			attributeState "unlocked", label:'unlocked', action:"lock.lock", icon:"st.locks.lock.unlocked", backgroundColor:"#ff0000", nextState:"locking"
 			attributeState "unknown", label:"unknown", action:"lock.lock", icon:"st.locks.lock.unknown", backgroundColor:"#ffffff", nextState:"locking"
 			attributeState "locking", label:'locking', icon:"st.locks.lock.locked", backgroundColor:"#79b821"
 			attributeState "unlocking", label:'unlocking', icon:"st.locks.lock.unlocked", backgroundColor:"#ffffff"
@@ -137,11 +137,11 @@ metadata
 		{
 			state "unknown_alarmMode", label: 'Alarm Mode\nLoading...', icon:"st.unknown.unknown.unknown", action:"setAlarmMode", nextState:"unknown_alarmMode"
 			state "Off_alarmMode", label: 'Alarm: Off', icon:"st.alarm.beep.beep", action:"setAlarmMode", nextState:"unknown_alarmMode"
-			state "Alert_alarmMode", label: 'Alert Alarm', icon:"st.alarm.beep.beep", action:"setAlarmMode", backgroundColor:"#79b821", nextState:"unknown_alarmMode"
-			state "Tamper_alarmMode", label: 'Tamper Alarm', icon:"st.alarm.beep.beep", action:"setAlarmMode", backgroundColor:"#79b821", nextState:"unknown_alarmMode"
-			state "Kick_alarmMode", label: 'Kick Alarm', icon:"st.alarm.beep.beep", action:"setAlarmMode", backgroundColor:"#79b821", nextState:"unknown_alarmMode"
+			state "Alert_alarmMode", label: 'Alert', icon:"st.alarm.beep.beep", action:"setAlarmMode", backgroundColor:"#79b821", nextState:"unknown_alarmMode"
+			state "Tamper_alarmMode", label: 'Tamper', icon:"st.alarm.beep.beep", action:"setAlarmMode", backgroundColor:"#79b821", nextState:"unknown_alarmMode"
+			state "Kick_alarmMode", label: 'Kick', icon:"st.alarm.beep.beep", action:"setAlarmMode", backgroundColor:"#79b821", nextState:"unknown_alarmMode"
 		}
-		controlTile("alarmSensitivity", "device.alarmSensitivity", "slider", height: 2, width: 2, inactiveLabel: false)
+		controlTile("alarmSensitivity", "device.alarmSensitivity", "slider", height: 2, width: 2, inactiveLabel: false, range:"(1..5)")
 		{
 			state "alarmSensitivity", label:'Sensitivity', action:"setAlarmSensitivity", backgroundColor:"#ff0000"
 		}
@@ -778,9 +778,8 @@ def zwaveEvent(physicalgraph.zwave.commands.configurationv2.ConfigurationReport 
 			def curAlarmMode = device.currentValue("alarmMode")
 			val = "${cmd.configurationValue[0]}"
 
-			// the lock has sensitivity values between 1 and 5.	 ST sliders want a value between 0 and 99.	Use a formula
-			// to make the internal attribute something visually appealing on the UI slider
-			def modifiedValue = (cmd.configurationValue[0] * 24) - 23
+			// the lock has sensitivity values between 1 and 5. We set the slider's range ("1".."5") in the Tile's Definition
+			def modifiedValue = cmd.configurationValue[0]
 
 			map = [ descriptionText: "$device.displayName Alarm $whichMode Sensitivity set to $val", displayed: true ]
 
@@ -1282,19 +1281,15 @@ def setAlarmMode()
 		case "Off_alarmMode":
 			newMode = 0x1
 			break
-
 		case "Alert_alarmMode":
 			newMode = 0x2
 			break
-
 		case "Tamper_alarmMode":
 			newMode = 0x3
-			break;
-
+			break
 		case "Kick_alarmMode":
 			newMode = 0x0
-			break;
-
+			break
 		case "unknown_alarmMode":
 		default:
 			// don't send a mode - instead request the current state
@@ -1338,8 +1333,7 @@ def setAlarmSensitivity(newValue)
 	def cmds = null
 	if (newValue != null)
 	{
-		// newvalue will be between 0 and 99, but we need a value between 1 and 5 inclusive...
-		newValue = (newValue / 20) + 1
+		// newvalue will be between 1 and 5 inclusive as controlled by the slider's range definition
 		newValue = newValue.toInteger();
 
 		// there are three possible values to set.	which one depends on the current alarmMode
@@ -1349,19 +1343,20 @@ def setAlarmSensitivity(newValue)
 
 		switch(cs)
 		{
-			case "Off":
+			case "Off_alarmMode":
 				// do nothing.	the slider should be disabled anyway
 				break
-			case "Alert":
+			case "Alert_alarmMode":
 				// set param 8
 				paramToSet = 0x8
-				break;
-			case "Tamper":
+				break
+			case "Tamper_alarmMode":
 				paramToSet = 0x9
 				break
-			case "Kick":
+			case "Kick_alarmMode":
 				paramToSet = 0xA
 				break
+			case "unknown_alarmMode":
 			default:
 				sendEvent(descriptionText: "$device.displayName unable to set alarm sensitivity while alarm mode in unknown state", displayed: true, isStateChange: true)
 				break
